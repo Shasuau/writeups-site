@@ -1,5 +1,5 @@
 <nav class="nav">
-  <a href="/" class="nav-logo">~/writeups<span>.sh</span></a>
+  <a href="{{ '/' | relative_url }}" class="nav-logo">~/writeups<span>.sh</span></a>
   <ul class="nav-links">
     <li><a href="{{ '/htb' | relative_url }}">HTB</a></li>
     <li><a href="{{ '/academy' | relative_url }}">Academy</a></li>
@@ -10,40 +10,128 @@
   </div>
 </nav>
 
-<!-- Search modal (Pagefind) -->
+<!-- Search modal -->
 <div id="search-modal" class="search-modal hidden">
   <div class="search-modal-inner">
-    <div id="search"></div>
+    <input type="text" id="search-input" class="search-input" placeholder="type to search writeups..." autofocus />
+    <div id="search-results" class="search-results"></div>
     <button class="search-close" id="search-close">close [esc]</button>
   </div>
 </div>
 
+<!-- Build search index from Jekyll posts -->
 <script>
-  const trigger = document.getElementById('search-trigger');
-  const modal   = document.getElementById('search-modal');
-  const close   = document.getElementById('search-close');
+const searchIndex = [
+  {% for post in site.posts %}
+  {
+    title: {{ post.title | jsonify }},
+    url: {{ post.url | relative_url | jsonify }},
+    platform: {{ post.platform | jsonify }},
+    difficulty: {{ post.difficulty | jsonify }},
+    os: {{ post.os | jsonify }},
+    tags: {{ post.tags | jsonify }},
+    stuck: {{ post.stuck_summary | jsonify }}
+  }{% unless forloop.last %},{% endunless %}
+  {% endfor %}
+];
 
-  trigger.addEventListener('click', () => {
-    modal.classList.remove('hidden');
-    document.body.style.overflow = 'hidden';
+const trigger = document.getElementById('search-trigger');
+const modal   = document.getElementById('search-modal');
+const close   = document.getElementById('search-close');
+const input   = document.getElementById('search-input');
+const results = document.getElementById('search-results');
+
+trigger.addEventListener('click', () => {
+  modal.classList.remove('hidden');
+  document.body.style.overflow = 'hidden';
+  setTimeout(() => input.focus(), 50);
+});
+
+function closeModal() {
+  modal.classList.add('hidden');
+  document.body.style.overflow = '';
+  input.value = '';
+  results.innerHTML = '';
+}
+
+close.addEventListener('click', closeModal);
+document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeModal(); });
+modal.addEventListener('click', (e) => { if (e.target === modal) closeModal(); });
+
+input.addEventListener('input', () => {
+  const q = input.value.toLowerCase().trim();
+  if (!q) { results.innerHTML = ''; return; }
+
+  const matches = searchIndex.filter(p => {
+    return p.title.toLowerCase().includes(q)
+      || (p.platform && p.platform.toLowerCase().includes(q))
+      || (p.difficulty && p.difficulty.toLowerCase().includes(q))
+      || (p.os && p.os.toLowerCase().includes(q))
+      || (p.stuck && p.stuck.toLowerCase().includes(q))
+      || (p.tags && p.tags.some(t => t.toLowerCase().includes(q)));
   });
 
-  close.addEventListener('click', () => {
-    modal.classList.add('hidden');
-    document.body.style.overflow = '';
-  });
+  if (!matches.length) {
+    results.innerHTML = '<div class="search-empty">no results for "' + input.value + '"</div>';
+    return;
+  }
 
-  document.addEventListener('keydown', (e) => {
-    if (e.key === 'Escape') {
-      modal.classList.add('hidden');
-      document.body.style.overflow = '';
-    }
-  });
-
-  // Init Pagefind UI inside the modal
-  window.addEventListener('DOMContentLoaded', () => {
-    if (window.PagefindUI) {
-      new PagefindUI({ element: '#search', showImages: false });
-    }
-  });
+  results.innerHTML = matches.map(p => `
+    <a href="${p.url}" class="search-result-item" onclick="closeModal()">
+      <div class="search-result-meta">
+        <span class="search-platform">${p.platform || ''}</span>
+        <span class="search-diff diff-${(p.difficulty||'').toLowerCase()}">${p.difficulty || ''}</span>
+        <span class="search-os">${p.os || ''}</span>
+      </div>
+      <div class="search-result-title">${p.title}</div>
+      ${p.stuck ? `<div class="search-result-stuck">"${p.stuck}"</div>` : ''}
+      <div class="search-result-tags">${(p.tags||[]).map(t => `<span>#${t}</span>`).join('')}</div>
+    </a>
+  `).join('');
+});
 </script>
+
+<style>
+.search-input {
+  width: 100%;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 10px 14px;
+  font-family: var(--font-mono);
+  font-size: 14px;
+  color: var(--text);
+  margin-bottom: 1rem;
+  outline: none;
+}
+.search-input:focus { border-color: var(--green); }
+
+.search-results { display: flex; flex-direction: column; gap: 2px; max-height: 400px; overflow-y: auto; }
+
+.search-result-item {
+  display: block;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 0.875rem 1rem;
+  text-decoration: none;
+  transition: background 0.15s;
+}
+.search-result-item:hover { background: var(--bg-raised); border-color: var(--green); }
+
+.search-result-meta { display: flex; gap: 8px; align-items: center; margin-bottom: 4px; }
+.search-platform { font-family: var(--font-mono); font-size: 10px; color: var(--text-dim); text-transform: uppercase; }
+.search-diff { font-family: var(--font-mono); font-size: 10px; padding: 1px 7px; border-radius: 3px; }
+.diff-easy   { color: var(--green); background: #3fb95018; }
+.diff-medium { color: var(--amber); background: #d2992218; }
+.diff-hard   { color: var(--red);   background: #f8514918; }
+.search-os { font-family: var(--font-mono); font-size: 10px; color: var(--blue); }
+.search-result-title { font-size: 15px; font-weight: 600; color: var(--text); margin-bottom: 4px; }
+.search-result-stuck { font-size: 12px; color: #6e7681; font-style: italic; margin-bottom: 6px; }
+.search-result-tags { display: flex; flex-wrap: wrap; gap: 4px; }
+.search-result-tags span {
+  font-family: var(--font-mono); font-size: 10px; color: var(--text-muted);
+  background: var(--bg-raised); border: 1px solid var(--border); padding: 1px 6px; border-radius: 3px;
+}
+.search-empty { font-family: var(--font-mono); font-size: 13px; color: var(--text-dim); padding: 1rem; text-align: center; }
+</style>
