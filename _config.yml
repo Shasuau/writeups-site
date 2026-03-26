@@ -1,7 +1,7 @@
 title: "writeups.sh"
 description: "HTB and Academy writeups for people who actually get stuck"
 baseurl: ""
-url: "https://writeups-sh.pages.dev"
+url: "https://writeups-site.pages.dev/"
 
 # Build
 markdown: kramdown
