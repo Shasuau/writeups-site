@@ -213,6 +213,7 @@ a { color: inherit; text-decoration: none; }
 /* Single card: don't stretch full width */
 .cards-1 {
   grid-template-columns: minmax(250px, 380px) !important;
+  width: fit-content;
 }
 
 /* Two cards: side by side, contained */
