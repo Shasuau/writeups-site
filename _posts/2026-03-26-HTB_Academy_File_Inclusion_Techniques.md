@@ -1,7 +1,7 @@
 ---
 layout: writeup
 title: "HTB Academy - File Inclusions Techniques"
-date: 2026-03-20
+date: 2026-03-26
 
 platform: HTB Academy
 difficulty: Academy
