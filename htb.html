@@ -1,0 +1,39 @@
+---
+layout: default
+title: "HackTheBox Writeups"
+permalink: /htb/
+---
+
+<div class="hero" style="padding-bottom:1rem;">
+  <div class="hero-eyebrow">// hackthebox</div>
+  <h1 class="hero-title">HackTheBox <em>Writeups</em></h1>
+  <p class="hero-sub">All retired HTB machine writeups — sorted newest first.</p>
+</div>
+
+<section class="writeups-section">
+  <div class="section-label">All HTB boxes</div>
+  {% assign htb_posts = site.posts | where: "platform", "HackTheBox" %}
+  {% if htb_posts.size > 0 %}
+  <div class="cards-grid">
+    {% for post in htb_posts %}
+    <a href="{{ post.url | relative_url }}" class="card">
+      <div class="card-accent accent-{{ post.difficulty | downcase }}"></div>
+      <div class="card-inner">
+        <div class="card-meta">
+          <span class="card-platform">{{ post.platform }}</span>
+          <span class="diff-badge diff-{{ post.difficulty | downcase }}">{{ post.difficulty }}</span>
+        </div>
+        <div class="card-title">{{ post.title }}</div>
+        <div class="card-os">{{ post.os }}</div>
+        {% if post.stuck_summary %}<div class="card-stuck">"{{ post.stuck_summary }}"</div>{% endif %}
+        <div class="card-tags">
+          {% for tag in post.tags limit:4 %}<span class="card-tag">{{ tag }}</span>{% endfor %}
+        </div>
+      </div>
+    </a>
+    {% endfor %}
+  </div>
+  {% else %}
+  <div class="coming-soon"><span class="prompt">$</span> no HTB writeups yet — check back soon_</div>
+  {% endif %}
+</section>

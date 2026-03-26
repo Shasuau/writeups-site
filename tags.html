@@ -1,0 +1,57 @@
+---
+layout: default
+title: "Tags"
+permalink: /tags/
+---
+
+<div class="hero" style="padding-bottom:1rem;">
+  <div class="hero-eyebrow">// browse by tag</div>
+  <h1 class="hero-title">All <em>Tags</em></h1>
+  <p class="hero-sub">Browse writeups by technique, tool, CVE, or OS.</p>
+</div>
+
+<section class="writeups-section">
+
+  {% assign all_tags = site.posts | map: "tags" | join: "," | split: "," | uniq | sort %}
+
+  {% if all_tags.size > 0 %}
+
+  <div class="tag-strip" style="margin-bottom:3rem;">
+    {% for tag in all_tags %}
+      <a href="#{{ tag | slugify }}" class="tag tag-gray">{{ tag }}</a>
+    {% endfor %}
+  </div>
+
+  {% for tag in all_tags %}
+    {% assign tagged_posts = site.posts | where_exp: "post", "post.tags contains tag" %}
+    {% if tagged_posts.size > 0 %}
+    <div id="{{ tag | slugify }}" style="margin-bottom:3rem;">
+      <div class="section-label">#{{ tag }} &nbsp;·&nbsp; {{ tagged_posts.size }} writeup{% if tagged_posts.size != 1 %}s{% endif %}</div>
+      <div class="cards-grid">
+        {% for post in tagged_posts %}
+        <a href="{{ post.url | relative_url }}" class="card">
+          <div class="card-accent accent-{{ post.difficulty | downcase }}"></div>
+          <div class="card-inner">
+            <div class="card-meta">
+              <span class="card-platform">{{ post.platform }}</span>
+              <span class="diff-badge diff-{{ post.difficulty | downcase }}">{{ post.difficulty }}</span>
+            </div>
+            <div class="card-title">{{ post.title }}</div>
+            <div class="card-os">{{ post.os }}</div>
+            {% if post.stuck_summary %}<div class="card-stuck">"{{ post.stuck_summary }}"</div>{% endif %}
+            <div class="card-tags">
+              {% for t in post.tags limit:4 %}<span class="card-tag">{{ t }}</span>{% endfor %}
+            </div>
+          </div>
+        </a>
+        {% endfor %}
+      </div>
+    </div>
+    {% endif %}
+  {% endfor %}
+
+  {% else %}
+  <div class="coming-soon"><span class="prompt">$</span> no tags yet — publish a writeup first_</div>
+  {% endif %}
+
+</section>
