@@ -14,7 +14,7 @@ permalink: /htb/
   <div class="section-label">All HTB boxes</div>
   {% assign htb_posts = site.posts | where: "platform", "HackTheBox" %}
   {% if htb_posts.size > 0 %}
-  <div class="cards-grid">
+  <div class="cards-grid cards-{{ htb_posts.size }}">
     {% for post in htb_posts %}
     <a href="{{ post.url | relative_url }}" class="card">
       <div class="card-accent accent-{{ post.difficulty | downcase }}"></div>
