@@ -210,10 +210,23 @@ a { color: inherit; text-decoration: none; }
   .cards-grid { grid-template-columns: repeat(3, 1fr); }
 }
 
-/* Single card: don't stretch full width */
+
 .cards-1 {
   grid-template-columns: minmax(250px, 380px) !important;
   width: fit-content;
+  background: transparent;
+  border: none;
+  border-radius: 0;
+}
+
+.cards-1 .card {
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  border-left: none;
+}
+
+.cards-1 .card-accent {
+  border-radius: 8px 0 0 8px;
 }
 
 /* Two cards: side by side, contained */
