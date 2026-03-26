@@ -237,6 +237,7 @@ a { color: inherit; text-decoration: none; }
   left: 0; top: 0; bottom: 0;
   width: 3px;
 }
+.accent-academy { background: var(--blue); }
 .accent-easy   { background: var(--green); }
 .accent-medium { background: var(--amber); }
 .accent-hard   { background: var(--red); }
