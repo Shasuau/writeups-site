@@ -14,7 +14,7 @@ permalink: /academy/
   <div class="section-label">All Academy boxes</div>
   {% assign academy_posts = site.posts | where: "platform", "HTB Academy" %}
   {% if academy_posts.size > 0 %}
-  <div class="cards-grid">
+  <div class="cards-grid cards-{{ academy_posts.size }}">
     {% for post in academy_posts %}
     <a href="{{ post.url | relative_url }}" class="card">
       <div class="card-accent accent-{{ post.difficulty | downcase }}"></div>

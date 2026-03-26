@@ -8,17 +8,17 @@ title: "writeups.sh"
   <h1 class="hero-title">Writeups for people<br>who actually get <em>stuck</em></h1>
   <p class="hero-sub">Step-by-step HTB and Academy walkthroughs. Real commands, real results, and the dead ends too — because that's where the learning happens.</p>
 
-  <div class="tag-strip">
-    <a href="{{ '/' | relative_url }}" class="tag tag-gray">All</a>
-    <a href="{{ '/tags/' | relative_url }}#linux" class="tag tag-green">Linux</a>
-    <a href="{{ '/tags/' | relative_url }}#windows" class="tag tag-blue">Windows</a>
-    <a href="{{ '/tags/' | relative_url }}#easy" class="tag tag-green">Easy</a>
-    <a href="{{ '/tags/' | relative_url }}#medium" class="tag tag-amber">Medium</a>
-    <a href="{{ '/tags/' | relative_url }}#hard" class="tag tag-red">Hard</a>
-    <a href="{{ '/tags/' | relative_url }}#smb" class="tag tag-gray">smb</a>
-    <a href="{{ '/tags/' | relative_url }}#web" class="tag tag-gray">web</a>
-    <a href="{{ '/tags/' | relative_url }}#privesc" class="tag tag-gray">privesc</a>
-  </div>
+    <div class="tag-strip">
+      <a href="{{ '/' | relative_url }}" class="tag tag-gray">All</a>
+      <span class="tag tag-green" onclick="openSearch('linux')">Linux</span>
+      <span class="tag tag-blue" onclick="openSearch('windows')">Windows</span>
+      <span class="tag tag-green" onclick="openSearch('easy')">Easy</span>
+      <span class="tag tag-amber" onclick="openSearch('medium')">Medium</span>
+      <span class="tag tag-red" onclick="openSearch('hard')">Hard</span>
+      <span class="tag tag-gray" onclick="openSearch('smb')">smb</span>
+      <span class="tag tag-gray" onclick="openSearch('web')">web</span>
+      <span class="tag tag-gray" onclick="openSearch('privesc')">privesc</span>
+    </div>
 </div>
 
 <section class="writeups-section">
@@ -74,4 +74,14 @@ title: "writeups.sh"
       <p>Not just the clean path to root — the wrong turns, the dead ends, and the facepalm moments. Because that's what you actually Google at 2am.</p>
     </div>
   </div>
+    <script>
+  function openSearch(term) {
+    document.getElementById('search-modal').classList.remove('hidden');
+    document.body.style.overflow = 'hidden';
+    const input = document.getElementById('search-input');
+    input.value = term;
+    input.dispatchEvent(new Event('input'));
+    setTimeout(() => input.focus(), 50);
+  }
+  </script>
 </div>
