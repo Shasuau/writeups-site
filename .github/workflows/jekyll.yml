@@ -20,7 +20,7 @@ jobs:
           source: ./
           destination: ./_site
       - name: Build Pagefind search index
-        run: npx pagefind --site _site
+        run: npx pagefind --site ./_site --output-path ./_site/pagefind
       - uses: actions/upload-pages-artifact@v3
         with:
           path: ./_site
