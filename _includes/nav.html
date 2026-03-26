@@ -71,9 +71,14 @@ input.addEventListener('input', () => {
   });
 
   if (!matches.length) {
-    results.innerHTML = '<div class="search-empty">no results for "' + input.value + '"</div>';
-    return;
-  }
+    if (input.value.includes('<') || input.value.includes('>') || input.value.toLowerCase().includes('script')) {
+      results.innerHTML = '<div class="search-empty" style="color:var(--green);font-family:var(--font-mono);">// nice try — maybe stick to HTB boxes for your XSS practice 😄</div>';
+      return;
+    }
+  const safe = input.value.replace(/</g, '&lt;').replace(/>/g, '&gt;');
+  results.innerHTML = '<div class="search-empty">no results for "' + safe + '"</div>';
+  return;
+}
 
   results.innerHTML = matches.map(p => `
     <a href="${p.url}" class="search-result-item" onclick="closeModal()">
