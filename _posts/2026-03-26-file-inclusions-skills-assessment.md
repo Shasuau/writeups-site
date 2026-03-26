@@ -1,10 +1,10 @@
 ---
 layout: writeup
-title: "Academy:File Inclusion Skills Assessment"
+title: "Academy - File Inclusion Skills Assessment"
 date: 2026-03-26
 
 platform: HTB Academy
-difficulty: N/A
+difficulty: Academy
 os: Linux
 status: Retired
 
