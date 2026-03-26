@@ -1,0 +1,40 @@
+---
+layout: default
+---
+
+<article class="writeup-page">
+
+  <header class="writeup-header">
+    <div class="writeup-header-inner">
+
+      <div class="writeup-breadcrumb">
+        <a href="/">~/writeups.sh</a>
+        <span>/</span>
+        <span>{{ page.platform | downcase }}</span>
+        <span>/</span>
+        <span>{{ page.title | downcase }}</span>
+      </div>
+
+      <h1 class="writeup-title">{{ page.title }}</h1>
+
+      <div class="writeup-meta-bar">
+        <span class="meta-pill platform">{{ page.platform }}</span>
+        <span class="meta-pill diff-{{ page.difficulty | downcase }}">{{ page.difficulty }}</span>
+        <span class="meta-pill os">{{ page.os }}</span>
+        <span class="meta-pill status">{{ page.status }}</span>
+      </div>
+
+      <div class="writeup-tags">
+        {% for tag in page.tags %}
+          <a href="/tags/{{ tag }}" class="card-tag">#{{ tag }}</a>
+        {% endfor %}
+      </div>
+
+    </div>
+  </header>
+
+  <div class="writeup-body">
+    {{ content }}
+  </div>
+
+</article>

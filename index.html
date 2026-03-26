@@ -1,0 +1,75 @@
+---
+layout: default
+title: "writeups.sh"
+---
+
+<div class="hero">
+  <div class="hero-eyebrow">// retired boxes only &nbsp;·&nbsp; no videos &nbsp;·&nbsp; no deleted accounts</div>
+  <h1 class="hero-title">Writeups for people<br>who actually get <em>stuck</em></h1>
+  <p class="hero-sub">Step-by-step HTB and Academy walkthroughs. Real commands, real results, and the dead ends too — because that's where the learning happens.</p>
+
+  <div class="tag-strip">
+    <a href="/" class="tag tag-gray">All</a>
+    <a href="/tags/linux" class="tag tag-green">Linux</a>
+    <a href="/tags/windows" class="tag tag-blue">Windows</a>
+    <a href="/tags/easy" class="tag tag-green">Easy</a>
+    <a href="/tags/medium" class="tag tag-amber">Medium</a>
+    <a href="/tags/hard" class="tag tag-red">Hard</a>
+    <a href="/tags/smb" class="tag tag-gray">smb</a>
+    <a href="/tags/web" class="tag tag-gray">web</a>
+    <a href="/tags/privesc" class="tag tag-gray">privesc</a>
+  </div>
+</div>
+
+<section class="writeups-section">
+
+  <div class="section-label">Recent writeups</div>
+
+  {% assign recent_posts = site.posts | limit: 6 %}
+
+  {% if recent_posts.size > 0 %}
+  <div class="cards-grid cards-{{ recent_posts.size }}">
+    {% for post in recent_posts %}
+    <a href="{{ post.url | relative_url }}" class="card">
+      <div class="card-accent accent-{{ post.difficulty | downcase }}"></div>
+      <div class="card-inner">
+        <div class="card-meta">
+          <span class="card-platform">{{ post.platform }}</span>
+          <span class="diff-badge diff-{{ post.difficulty | downcase }}">{{ post.difficulty }}</span>
+        </div>
+        <div class="card-title">{{ post.title }}</div>
+        <div class="card-os">{{ post.os }}</div>
+        {% if post.stuck_summary %}
+        <div class="card-stuck">"{{ post.stuck_summary }}"</div>
+        {% endif %}
+        <div class="card-tags">
+          {% for tag in post.tags limit:4 %}
+          <span class="card-tag">{{ tag }}</span>
+          {% endfor %}
+        </div>
+      </div>
+    </a>
+    {% endfor %}
+  </div>
+
+  {% if recent_posts.size < 3 %}
+  <div class="coming-soon">
+    <span class="prompt">$</span> more writeups incoming — check back soon_
+  </div>
+  {% endif %}
+
+  {% else %}
+  <div class="coming-soon">
+    <span class="prompt">$</span> first writeup incoming — check back soon_
+  </div>
+  {% endif %}
+
+</section>
+
+<div class="stuck-banner">
+  <div class="stuck-icon">//</div>
+  <div class="stuck-text">
+    <h3>Every writeup includes a "where I got stuck" section</h3>
+    <p>Not just the clean path to root — the wrong turns, the dead ends, and the facepalm moments. Because that's what you actually Google at 2am.</p>
+  </div>
+</div>

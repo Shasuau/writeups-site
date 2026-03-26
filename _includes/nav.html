@@ -1,0 +1,49 @@
+<nav class="nav">
+  <a href="/" class="nav-logo">~/writeups<span>.sh</span></a>
+  <ul class="nav-links">
+    <li><a href="/htb">HTB</a></li>
+    <li><a href="/academy">Academy</a></li>
+    <li><a href="/tags">Tags</a></li>
+  </ul>
+  <div class="search-bar" id="search-trigger">
+    <span class="prompt">$</span> search writeups_
+  </div>
+</nav>
+
+<!-- Search modal (Pagefind) -->
+<div id="search-modal" class="search-modal hidden">
+  <div class="search-modal-inner">
+    <div id="search"></div>
+    <button class="search-close" id="search-close">close [esc]</button>
+  </div>
+</div>
+
+<script>
+  const trigger = document.getElementById('search-trigger');
+  const modal   = document.getElementById('search-modal');
+  const close   = document.getElementById('search-close');
+
+  trigger.addEventListener('click', () => {
+    modal.classList.remove('hidden');
+    document.body.style.overflow = 'hidden';
+  });
+
+  close.addEventListener('click', () => {
+    modal.classList.add('hidden');
+    document.body.style.overflow = '';
+  });
+
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') {
+      modal.classList.add('hidden');
+      document.body.style.overflow = '';
+    }
+  });
+
+  // Init Pagefind UI inside the modal
+  window.addEventListener('DOMContentLoaded', () => {
+    if (window.PagefindUI) {
+      new PagefindUI({ element: '#search', showImages: false });
+    }
+  });
+</script>
