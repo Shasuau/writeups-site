@@ -1,6 +1,6 @@
 # writeups.sh
 
-HTB and Academy writeups for people who actually get stuck.
+HTB and Academy writeups for people who actually get stuck. 
 
 ---
 
