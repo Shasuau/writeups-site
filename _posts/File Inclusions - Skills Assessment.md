@@ -1,10 +1,10 @@
 ---
 layout: writeup
-title: "Sumace Consulting - File Inclusion Skills Assessment"
+title: "Academy:File Inclusion Skills Assessment"
 date: 2026-03-26
 
 platform: HTB Academy
-difficulty: Medium
+difficulty: N/A
 os: Linux
 status: Retired
 
