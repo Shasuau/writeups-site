@@ -17,7 +17,11 @@ permalink: /htb/
   <div class="cards-grid cards-{{ htb_posts.size }}">
     {% for post in htb_posts %}
     <a href="{{ post.url | relative_url }}" class="card">
-      <div class="card-accent accent-{{ post.difficulty | downcase }}"></div>
+        {% if post.platform == "HTB Academy" %}
+        <div class="card-accent accent-academy"></div>
+        {% else %}
+        <div class="card-accent accent-{{ post.difficulty | downcase }}"></div>
+        {% endif %}
       <div class="card-inner">
         <div class="card-meta">
           <span class="card-platform">{{ post.platform }}</span>
