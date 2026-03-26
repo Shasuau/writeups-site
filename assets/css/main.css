@@ -456,6 +456,7 @@ a { color: inherit; text-decoration: none; }
   padding: 1.25rem;
   overflow-x: visible;
   white-space: pre-wrap;
+  word-break: break-all;
   margin: 1.25rem 0;
 }
 
