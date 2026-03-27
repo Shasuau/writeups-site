@@ -25,7 +25,7 @@ title: "writeups.sh"
 
   <div class="section-label">Recent writeups</div>
 
-  {% assign recent_posts = site.posts | limit: 6 %}
+  {% assign recent_posts = site.posts | slice: 0, 6 %}
 
   {% if recent_posts.size > 0 %}
   <div class="cards-grid cards-{{ recent_posts.size }}">
