@@ -2,11 +2,13 @@
 layout: writeup
 title: "HTB Academy - Command Injection Techniques"
 date: 2026-03-27
+published: false
 
 platform: HTB Academy
 difficulty: Academy
 os: Linux
 status: Retired
+
 
 stuck_summary: "So many mini tests, so many problems but cat won't work if you don't specify the path"
 
